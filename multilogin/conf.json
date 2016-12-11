@@ -1,0 +1,10 @@
+{
+  "name": "multilogin",
+  "routeExposure": "/multilogin",
+  "secretKey": "loopback_secret_key",
+  "activate": true,
+  "services": {},
+  "pluginDepedencies": {
+    "login": "^2.0.0"
+  }
+}
