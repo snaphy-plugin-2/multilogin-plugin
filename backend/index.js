@@ -127,7 +127,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         var User = databaseObj.User;
         //Now defining a method login with access token
         User.loginWithFb = function (accessToken, cb) {
-            //console.log("i am here");
             FB.setAccessToken(accessToken);
             FB.api('me', {fields: ['id', 'name', "first_name", "last_name", "email"]}, function (res) {
                 if(!res || res.error) {
