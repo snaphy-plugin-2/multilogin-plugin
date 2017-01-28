@@ -2,6 +2,7 @@
 /*global module, require, return, console */
 module.exports = function( server, databaseObj, helper, packageObj) {
     var FB = require('fb');
+    var INSTAGRAM_API = require('instagram-node').instagram();
     //var util = require("./utils");
     var https = require('https');
     var request = require('request');
@@ -61,6 +62,113 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
 
     //Visit this link for more info. https://developers.google.com/identity/sign-in/web/backend-auth
+    var addUserInstagramLogin = function(server, databaseObj, helper, packageObj){
+        const {method, enable} = config.instagram.login.mobile;
+        if(enable){
+            var User = databaseObj.User;
+            var defaultError = new Error('login failed');
+            defaultError.statusCode = 401;
+            defaultError.code = 'LOGIN_FAILED';
+
+            User[method] = function(accessToken, callback){
+                addUserInstagramManual(accessToken, callback);
+            };
+
+            User.remoteMethod(
+                method,
+                {
+                    description: 'Logins a user by authenticating it with instagram',
+                    accepts: [
+                        { arg: 'accessToken', type: 'string', required: true, http: { source:'form'} }
+                    ],
+                    returns: {
+                        arg: 'accessToken', type: 'object', root: true,
+                        description:
+                        'The response body contains properties of the AccessToken created on login.\n' +
+                        'Depending on the value of `include` parameter, the body may contain ' +
+                        'additional properties:\n\n' +
+                        '  - `user` - `{User}` - Data of the currently logged in user. (`include=user`)\n\n'
+                    },
+                    http: {verb: 'post'}
+                }
+
+            );
+        }
+
+    };
+
+
+    var addUserInstagramManual = function(accessToken, callback){
+        var User = databaseObj.User;
+        if(accessToken){
+            INSTAGRAM_API.use({
+                access_token: accessToken
+            });
+
+            INSTAGRAM_API.user('user_id', function(err, result, remaining, limit) {
+                if(err){
+                    console.error(err);
+                    callback(err);
+                }else{
+                    console.log(result, remaining, limit);
+                }
+            });
+
+/*
+            request(url, function (error, response, data) {
+                if (!error && response.statusCode === 200) {
+                    if(data){
+                        try{
+                            data = JSON.parse(data);
+                        }
+                        catch (err){
+                            console.log(err);
+                            return callback(defaultError);
+                        }
+
+
+                        //Now create user and login..
+                        //createUserOrLogin(data, packageObj, User,  callback);
+                        var userData = {};
+                        userData.email = data.email;
+                        userData.name = data.name;
+                        userData.firstName = data.given_name;
+                        userData.lastName = data.family_name;
+                        if(phoneNumber){
+                            userData.phoneNumber = phoneNumber;
+                        }
+
+                        var profileUrl = data.picture;
+
+                        if(profileUrl){
+                            userData.profilePic = {
+                                url: {
+                                    defaultUrl:data.picture,
+                                    unSignedUrl: data.picture
+                                }
+                            };
+                        }
+
+                        //console.log(userData);
+
+                        createUserOrLogin(server, userData, packageObj, User, databaseObj, accessToken, data.sub, "google", callback);
+                    }else{
+                        return callback(defaultError, null);
+                    }
+                }else{
+                    console.log(error); // Show the HTML for the Google homepage.
+                    console.error("Error getting data from the google plus server.");
+                    // Send error
+                    callback(error);
+                }
+            });*/
+        }else{
+            callback(new Error("Access Token is  required"));
+        }
+    };
+
+
+    //Visit this link for more info. https://developers.google.com/identity/sign-in/web/backend-auth
     var addUserGoogleLogin = function(server, databaseObj, helper, packageObj){
         const {method, enable} = config.google.login.mobile;
         if(enable){
@@ -104,7 +212,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         if(accessToken){
                 //var url = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + accessToken;
                 var url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=" + accessToken;
-                console.log(url);
+
 
                 request(url, function (error, response, data) {
                     if (!error && response.statusCode === 200) {
@@ -153,7 +261,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         callback(error);
                     }
                 });
-            }
+        }else{
+            callback(new Error("Access Token is  required"));
+        }
     };
 
 
