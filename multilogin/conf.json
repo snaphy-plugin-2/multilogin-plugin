@@ -4,6 +4,41 @@
   "secretKey": "loopback_secret_key",
   "activate": true,
   "services": {},
+  "config":{
+    "google":{
+      "login":{
+        "mobile":{
+          "method": "loginWithGoogle",
+          "enable": true
+        },
+        "web":{
+          "enable": false
+        }
+      }
+    },
+    "facebook":{
+      "login":{
+        "mobile":{
+          "method": "loginWithFb",
+          "enable": true
+        },
+        "web":{
+          "enable": false
+        }
+      }
+    },
+    "instagram":{
+      "login":{
+        "mobile":{
+          "method": "loginWithInstagram",
+          "enable": true
+        },
+        "web":{
+          "enable": false
+        }
+      }
+    }
+  },
   "pluginDepedencies": {
     "login": "^2.0.0"
   }

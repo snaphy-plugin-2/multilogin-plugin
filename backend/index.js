@@ -5,6 +5,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     //var util = require("./utils");
     var https = require('https');
     var request = require('request');
+    const {config} = packageObj;
 
     /**
      * Here server is the main app object
@@ -20,43 +21,79 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      * @return {[type]} [description]
      */
     var init = function(){
-        //Add google login..
-        addUserGoogleLogin(server, databaseObj, helper, packageObj);
-        //Add facebook login..
-        addUserFbLogin(server, databaseObj, helper, packageObj);
+        const {google, facebook, instagram} = config;
+        if(google){
+            if(google.login){
+                if(google.login.mobile){
+                    if(google.login.mobile.enable){
+                        //Add google login..
+                        addUserGoogleLogin(server, databaseObj, helper, packageObj);
+                    }
+                }
+            }
+        }
+
+        if(facebook){
+            if(facebook.login){
+                if(facebook.login.mobile){
+                    if(facebook.login.mobile.enable){
+                        //Add facebook login..
+                        addUserFbLogin(server, databaseObj, helper, packageObj);
+                    }
+                }
+            }
+        }
+
+
+        if(instagram){
+            if(instagram.login){
+                if(instagram.login.mobile){
+                    if(instagram.login.mobile.enable){
+                        //Add facebook login..
+                        addUserInstagramLogin(server, databaseObj, helper, packageObj);
+                    }
+                }
+            }
+        }
+
+
     };
 
 
     //Visit this link for more info. https://developers.google.com/identity/sign-in/web/backend-auth
     var addUserGoogleLogin = function(server, databaseObj, helper, packageObj){
-        var User = databaseObj.User;
-        var defaultError = new Error('login failed');
-        defaultError.statusCode = 401;
-        defaultError.code = 'LOGIN_FAILED';
+        const {method, enable} = config.google.login.mobile;
+        if(enable){
+            var User = databaseObj.User;
+            var defaultError = new Error('login failed');
+            defaultError.statusCode = 401;
+            defaultError.code = 'LOGIN_FAILED';
 
-        User.loginWithGoogle = function(accessToken, callback){
-            loginWithGoogleManual(accessToken, callback);
-        };
+            User[method] = function(accessToken, callback){
+                loginWithGoogleManual(accessToken, callback);
+            };
 
-        User.remoteMethod(
-            'loginWithGoogle',
-            {
-                description: 'Logins a user by authenticating it with google',
-                accepts: [
-                    { arg: 'accessToken', type: 'string', required: true, http: { source:'form'} }
-                ],
-                returns: {
-                    arg: 'accessToken', type: 'object', root: true,
-                    description:
-                    'The response body contains properties of the AccessToken created on login.\n' +
-                    'Depending on the value of `include` parameter, the body may contain ' +
-                    'additional properties:\n\n' +
-                    '  - `user` - `{User}` - Data of the currently logged in user. (`include=user`)\n\n'
-                },
-                http: {verb: 'post'}
-            }
+            User.remoteMethod(
+                method,
+                {
+                    description: 'Logins a user by authenticating it with google',
+                    accepts: [
+                        { arg: 'accessToken', type: 'string', required: true, http: { source:'form'} }
+                    ],
+                    returns: {
+                        arg: 'accessToken', type: 'object', root: true,
+                        description:
+                        'The response body contains properties of the AccessToken created on login.\n' +
+                        'Depending on the value of `include` parameter, the body may contain ' +
+                        'additional properties:\n\n' +
+                        '  - `user` - `{User}` - Data of the currently logged in user. (`include=user`)\n\n'
+                    },
+                    http: {verb: 'post'}
+                }
 
-        );
+            );
+        }
+
     };
 
 
@@ -123,60 +160,63 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
 
     var addUserFbLogin = function(server, databaseObj, helper, packageObj){
+        const {method, enable} = config.facebook.login.mobile;
+        if(enable){
+            var User = databaseObj.User;
+            //Now defining a method login with access token
+            User[method] = function (accessToken, cb) {
+                FB.setAccessToken(accessToken);
+                FB.api('me', {fields: ['id', 'name', "first_name", "last_name", "email"]}, function (res) {
+                    if(!res || res.error) {
+                        console.log(!res ? 'error occurred' : res.error);
+                        var err = new Error('Invalid Access Token');
+                        err.statusCode = 401;
+                        cb(err);
+                        return;
+                    }
 
-        var User = databaseObj.User;
-        //Now defining a method login with access token
-        User.loginWithFb = function (accessToken, cb) {
-            FB.setAccessToken(accessToken);
-            FB.api('me', {fields: ['id', 'name', "first_name", "last_name", "email"]}, function (res) {
-                if(!res || res.error) {
-                    console.log(!res ? 'error occurred' : res.error);
-                    var err = new Error('Invalid Access Token');
-                    err.statusCode = 401;
-                    cb(err);
-                    return;
+                    var profileUrl = "https://graph.facebook.com/"+ res.id +"/picture?width=500&height=500";
+
+
+
+                    var userData = {email: res.email, "firstName": res.first_name, "lastName": res.last_name };
+
+                    //console.log(profileUrl);
+                    if(profileUrl){
+                        userData.profilePic = {
+                            url: {
+                                defaultUrl:profileUrl,
+                                unSignedUrl: profileUrl
+                            }
+                        };
+                    }
+
+                    //Now create user and login..
+                    createUserOrLogin(server, userData, packageObj, User, databaseObj, accessToken, res.id, "facebook", cb);
+                });
+            };
+
+
+            User.remoteMethod(
+                method,
+                {
+                    description: 'Login a user by authenticating it with an external entity',
+                    accepts: [
+                        { arg: 'external_access_token', type: 'string', required: true, http: { source:'form'} }
+                    ],
+                    returns: {
+                        arg: 'accessToken', type: 'object', root: true,
+                        description:
+                        'The response body contains properties of the AccessToken created on login.\n' +
+                        'Depending on the value of `include` parameter, the body may contain ' +
+                        'additional properties:\n\n' +
+                        '  - `user` - `{User}` - Data of the currently logged in user. (`include=user`)\n\n'
+                    },
+                    http: {verb: 'post'}
                 }
+            );
+        }
 
-                var profileUrl = "https://graph.facebook.com/"+ res.id +"/picture?width=500&height=500";
-
-
-
-                var userData = {email: res.email, "firstName": res.first_name, "lastName": res.last_name };
-
-                //console.log(profileUrl);
-                if(profileUrl){
-                    userData.profilePic = {
-                        url: {
-                            defaultUrl:profileUrl,
-                            unSignedUrl: profileUrl
-                        }
-                    };
-                }
-
-                //Now create user and login..
-                createUserOrLogin(server, userData, packageObj, User, databaseObj, accessToken, res.id, "facebook", cb);
-            });
-        };
-
-
-        User.remoteMethod(
-            'loginWithFb',
-            {
-                description: 'Login a user by authenticating it with an external entity',
-                accepts: [
-                    { arg: 'external_access_token', type: 'string', required: true, http: { source:'form'} }
-                ],
-                returns: {
-                    arg: 'accessToken', type: 'object', root: true,
-                    description:
-                    'The response body contains properties of the AccessToken created on login.\n' +
-                    'Depending on the value of `include` parameter, the body may contain ' +
-                    'additional properties:\n\n' +
-                    '  - `user` - `{User}` - Data of the currently logged in user. (`include=user`)\n\n'
-                },
-                http: {verb: 'post'}
-            }
-        );
     };
 
 
