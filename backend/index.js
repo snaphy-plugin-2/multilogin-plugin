@@ -8,6 +8,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     var request = require('request');
     const {config} = packageObj;
 
+
     /**
      * Here server is the main app object
      * databaseObj is the mapped database from the package.json file
@@ -50,19 +51,23 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             if(instagram.login){
                 if(instagram.login.mobile){
                     if(instagram.login.mobile.enable){
+                        //Add Instagram client secret key and secret id..
+
                         //Add facebook login..
                         addUserInstagramLogin(server, databaseObj, helper, packageObj);
                     }
                 }
             }
         }
-
-
     };
 
 
     //Visit this link for more info. https://developers.google.com/identity/sign-in/web/backend-auth
     var addUserInstagramLogin = function(server, databaseObj, helper, packageObj){
+        //Add instagram client secret key and secret id..
+        // Every call to `ig.use()` overrides the `client_id/client_secret`
+        
+
         const {method, enable} = config.instagram.login.mobile;
         if(enable){
             var User = databaseObj.User;
@@ -70,8 +75,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             defaultError.statusCode = 401;
             defaultError.code = 'LOGIN_FAILED';
 
-            User[method] = function(accessToken, callback){
-                addUserInstagramManual(accessToken, callback);
+            User[method] = function(accessToken, userId, callback){
+                addUserInstagramManual(accessToken, userId, callback);
             };
 
             User.remoteMethod(
@@ -79,7 +84,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 {
                     description: 'Logins a user by authenticating it with instagram',
                     accepts: [
-                        { arg: 'accessToken', type: 'string', required: true, http: { source:'form'} }
+                        { arg: 'accessToken', type: 'string', required: true, http: { source:'form'} },
+                        { arg: 'userId', type: 'string', required: true, http: { source:'form'} }
                     ],
                     returns: {
                         arg: 'accessToken', type: 'object', root: true,
@@ -98,23 +104,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     };
 
 
-    var addUserInstagramManual = function(accessToken, callback){
+    var addUserInstagramManual = function(accessToken, userId, callback){
         var User = databaseObj.User;
-        if(accessToken){
-            INSTAGRAM_API.use({
-                access_token: accessToken
-            });
+        if(accessToken && userId){
+            const url = "https://api.instagram.com/v1/users/" + userId + "/?access_token="+ accessToken;
 
-            INSTAGRAM_API.user('user_id', function(err, result, remaining, limit) {
-                if(err){
-                    console.error(err);
-                    callback(err);
-                }else{
-                    console.log(result, remaining, limit);
-                }
-            });
-
-/*
             request(url, function (error, response, data) {
                 if (!error && response.statusCode === 200) {
                     if(data){
@@ -126,42 +120,37 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             return callback(defaultError);
                         }
 
-
+                        data = data.data;
+                        
                         //Now create user and login..
                         //createUserOrLogin(data, packageObj, User,  callback);
                         var userData = {};
-                        userData.email = data.email;
-                        userData.name = data.name;
-                        userData.firstName = data.given_name;
-                        userData.lastName = data.family_name;
-                        if(phoneNumber){
-                            userData.phoneNumber = phoneNumber;
-                        }
-
-                        var profileUrl = data.picture;
+                        userData.username = data.username;
+                        userData.name = data.full_name;
+                        userData.firstName = data.full_name;
+                    
+                        var profileUrl = data.profile_picture;
 
                         if(profileUrl){
                             userData.profilePic = {
                                 url: {
-                                    defaultUrl:data.picture,
-                                    unSignedUrl: data.picture
+                                    defaultUrl: profileUrl,
+                                    unSignedUrl: profileUrl
                                 }
                             };
                         }
 
-                        //console.log(userData);
-
-                        createUserOrLogin(server, userData, packageObj, User, databaseObj, accessToken, data.sub, "google", callback);
+                        createUserOrLogin(server, userData, packageObj, User, databaseObj, accessToken, userId, "instagram", callback);
                     }else{
                         return callback(defaultError, null);
                     }
                 }else{
                     console.log(error); // Show the HTML for the Google homepage.
-                    console.error("Error getting data from the google plus server.");
+                    console.error("Error getting data from the instagram server.");
                     // Send error
                     callback(error);
                 }
-            });*/
+            });
         }else{
             callback(new Error("Access Token is  required"));
         }
@@ -349,14 +338,21 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         var defaultError = new Error('login failed');
         defaultError.statusCode = 401;
         defaultError.code = 'LOGIN_FAILED';
-        if(data.email){
+        if(data.email || data.username){
             // accessToken is valid, so
-            var query = { email : data.email},
-                password = packageObj.secretKey,
+            var query = {};
+
+            if(data.email){
+                query.email = data.email;
+            }else if(data.username) {
+                query.username = data.username;
+            }
+
+            var password = packageObj.secretKey,
                 AccessTokenModel = databaseObj.FacebookAccessToken;
 
-
             User.findOne({where: query}, function (err, user){
+
                 if(err){
                     console.log(err);
                     callback(defaultError);
@@ -365,6 +361,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
                     //console.log(userData);
                     data.password = password;
+                
 
                     // User email not found in the db case, create a new profile and then log him in
                     User.create(data, function(err, user) {
@@ -392,15 +389,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                     }else{
                         updateAccessTokenModel(server, data,  user, AccessTokenModel, thirdPartyAccessToken, thirdPartyId, type,  callback);
                     }
-
-                    
                 }
             });
         }else{
 
             callback(defaultError);
         }
-
     };
 
 
