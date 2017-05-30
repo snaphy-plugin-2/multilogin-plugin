@@ -36,6 +36,10 @@
         "web":{
           "enable": false
         }
+      },
+      "credentials":{
+        "CLIENT_SECRET": "INSTAGRAM_CLIENT_SECRET",
+        "CLIENT_ID": "INSTAGRAM_CLIENT_ID"
       }
     }
   },
