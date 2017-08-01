@@ -1,7 +1,7 @@
 {
   "name": "multilogin",
   "routeExposure": "/multilogin",
-  "secretKey": "loopback_secret_key",
+  "secretKey": "easypoints_secret_key",
   "activate": true,
   "services": {},
   "config":{
@@ -9,7 +9,7 @@
       "login":{
         "mobile":{
           "method": "loginWithGoogle",
-          "enable": true
+          "enable": false
         },
         "web":{
           "enable": false
@@ -20,7 +20,7 @@
       "login":{
         "mobile":{
           "method": "loginWithFb",
-          "enable": true
+          "enable": false
         },
         "web":{
           "enable": false
@@ -31,7 +31,7 @@
       "login":{
         "mobile":{
           "method": "loginWithInstagram",
-          "enable": true
+          "enable": false
         },
         "web":{
           "enable": false
@@ -40,6 +40,25 @@
       "credentials":{
         "CLIENT_SECRET": "INSTAGRAM_CLIENT_SECRET",
         "CLIENT_ID": "INSTAGRAM_CLIENT_ID"
+      }
+    },
+    "msg91":{
+      "login":{
+        "mobile":{
+          "method": "loginWithOtp",
+          "requestOtp": "requestOtp",
+          "retryOtp": "retryOtp",
+          "enable": true
+        }
+      },
+      "user":{
+        "numberField" : "contact_number"
+      },
+      "credentials":{
+        "authKey":"xxxxxxxxxxx",
+        "serviceName": "ESYPTS",
+        "expiryInMinutes": "2",
+        "defaultMessage": "Otp for your request is {{otp}}, please do not share it with anybody"
       }
     }
   },

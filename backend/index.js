@@ -4,9 +4,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     var FB = require('fb');
     var INSTAGRAM_API = require('instagram-node').instagram();
     //var util = require("./utils");
-    var https = require('https');
+    var https = require("https");
     var request = require('request');
     const {config} = packageObj;
+    const {addPasswordlessLogin} = require("./loginWithOtp")(server, databaseObj, helper, packageObj);
 
 
     /**
@@ -23,7 +24,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      * @return {[type]} [description]
      */
     var init = function(){
-        const {google, facebook, instagram} = config;
+        const {google, facebook, instagram, msg91} = config;
         if(google){
             if(google.login){
                 if(google.login.mobile){
@@ -55,6 +56,17 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
                         //Add facebook login..
                         addUserInstagramLogin(server, databaseObj, helper, packageObj);
+                    }
+                }
+            }
+        }
+
+
+        if(msg91){
+            if(msg91.login){
+                if(msg91.login.mobile){
+                    if(msg91.login.mobile.enable){
+                        addPasswordlessLogin(msg91);
                     }
                 }
             }
@@ -198,6 +210,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
     var loginWithGoogleManual = function(accessToken, callback, phoneNumber){
         var User = databaseObj.User;
+        var defaultError = new Error('login failed');
+        defaultError.statusCode = 401;
+        defaultError.code = 'LOGIN_FAILED';
         if(accessToken){
                 //var url = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + accessToken;
                 var url = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=" + accessToken;
