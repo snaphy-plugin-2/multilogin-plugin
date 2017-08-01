@@ -128,7 +128,14 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                     if(error){
                         reject(error);
                     }else if(data.type == 'success') {
-                        //TODO: Create user or login..
+                        var User = databaseObj.User;
+                        createUserOrLogin(number, User, msg91Config)
+                            .then(function (accessToken) {
+                                resolve(accessToken);
+                            })
+                            .catch(function (error) {
+                                reject(error);
+                            });
                     }
                     else {
                         reject(new Error("OTP didnot match"));
@@ -230,13 +237,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     //Create user or login user.....
     /**
      * Create a user if not availaible and then login user finally.
-     * @param server loopback app object
      * @param number  {Number} Number
      * @param User {Object} {Loopback User model}
      * @param msg91Config {{}}
 
      */
-    var createUserOrLogin = function(server, number, User, msg91Config){
+    var createUserOrLogin = function(number, User, msg91Config){
         return new Promise(function (resolve, reject) {
             var defaultError = new Error('login failed');
             defaultError.statusCode = 401;
@@ -247,7 +253,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             const numberField = msg91Config.user.numberField;
             if(numberField){
                 query = {};
-                query[numberField] = number;
+                query[numberField] = number.toString();
                 User.findOne({where: query}, function (err, user){
                     if(err){
                         console.error(err);
