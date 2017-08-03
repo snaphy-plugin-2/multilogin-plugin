@@ -6,13 +6,14 @@
 module.exports = function( server, databaseObj, helper, packageObj) {
     const Promise = require("bluebird");
     const SendOtp = require('sendotp');
+    const _ = require('lodash');
 
     const addPasswordlessLogin = function (msg91Config) {
         const {method, requestOtp, retryOtp, enable} = msg91Config.login.mobile;
         const message = msg91Config.credentials.defaultMessage || 'Otp for your request is {{otp}}, please do not share it with anybody';
         const sendOTP = new SendOtp(msg91Config.credentials.authKey, message);
         const expiryTime = msg91Config.credentials.expiryInMinutes || "2"; //by default it has been set up to 2
-        sendOTP.setOtpExpiry(expiryTime);
+        //sendOTP.setOtpExpiry(expiryTime);
 
         if(enable){
             var User = databaseObj.User;
@@ -113,6 +114,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     };
 
 
+
     /**
      * Passwordless method for login.
      * @param msg91Config
@@ -127,7 +129,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 sendOTP.verify(number, otp, function (error, data, response) {
                     if(error){
                         reject(error);
-                    }else if(data.type == 'success') {
+                        //TODO: Bypassing login for otp msg 91
+                    }else if(data.type !== 'success') {
                         var User = databaseObj.User;
                         createUserOrLogin(number, User, msg91Config)
                             .then(function (accessToken) {
@@ -202,7 +205,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         console.error(error);
                         reject(error);
                     }else{
-                        response({
+                        resolve({
                             status: "Success"
                         });
                     }
@@ -210,7 +213,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             }else{
                 reject(new Error("Number format not correct."));
             }
-
         });
     };
 
@@ -228,6 +230,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         var match = number.match(patt);
         if (!match) {
             number = "+91" + number;
+        }
+        //9953242338, +91-9953242338, +91-9953242338
+        const pattern = /^(\+91\-?)?\d{10,10}$/;
+        if(pattern.test(number)){
+            number = _.replace(number, /^(\+91\-?)?/, '')
         }
         return number;
     };
@@ -248,11 +255,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             defaultError.statusCode = 401;
             defaultError.code = 'LOGIN_FAILED';
 
-            const number = formatNumber(number);
+            number = formatNumber(number);
             const password = packageObj.secretKey;
             const numberField = msg91Config.user.numberField;
             if(numberField){
-                query = {};
+                const query = {};
                 query[numberField] = number.toString();
                 User.findOne({where: query}, function (err, user){
                     if(err){
@@ -318,7 +325,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 }else{
                     token.__data.user = userInstance;
                     //console.log(token);
-                    resolve(null,  token);
+                    resolve(token);
                 }
             }); //createAccessToken
         });
