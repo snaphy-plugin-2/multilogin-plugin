@@ -129,8 +129,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 sendOTP.verify(number, otp, function (error, data, response) {
                     if(error){
                         reject(error);
-                        //TODO: Bypassing login for otp msg 91
-                    }else if(data.type !== 'success') {
+                    }else if(data.type === 'success') {
                         var User = databaseObj.User;
                         createUserOrLogin(number, User, msg91Config)
                             .then(function (accessToken) {
