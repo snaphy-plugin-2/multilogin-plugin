@@ -23,16 +23,13 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 defaultError.code = 'LOGIN_FAILED';
             */
             User[requestOtp] = function(number, callback){
-                console.log("Otp requesting method.");
                 requestOtpMethod(msg91Config, number, sendOTP)
                     .then(function () {
-                        console.log("Otp send");
                         callback(null, {
                             status: "Success"
                         });
                     })
                     .catch(function (error) {
-                        console.error("Otp send Error", error);
                         callback(error);
                     });
             };
@@ -41,13 +38,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             User[retryOtp] = function(number, callback){
                 retryOtpMethod(msg91Config, number, sendOTP)
                     .then(function () {
-                        console.log("Otp re-send");
                         callback(null, {
                             status: "Success"
                         });
                     })
                     .catch(function (error) {
-                        console.error("Otp re-send Error", error);
                         callback(error);
                     });
             };
