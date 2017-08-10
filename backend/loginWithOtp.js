@@ -23,6 +23,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 defaultError.code = 'LOGIN_FAILED';
             */
             User[requestOtp] = function(number, callback){
+                console.log("Otp requesting method.");
                 requestOtpMethod(msg91Config, number, sendOTP)
                     .then(function () {
                         console.log("Otp send");
