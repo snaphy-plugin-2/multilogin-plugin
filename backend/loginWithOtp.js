@@ -17,18 +17,21 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
         if(enable){
             var User = databaseObj.User;
-            /*var defaultError = new Error('login failed');
-            defaultError.statusCode = 401;
-            defaultError.code = 'LOGIN_FAILED';
-*/
+            /*
+                var defaultError = new Error('login failed');
+                defaultError.statusCode = 401;
+                defaultError.code = 'LOGIN_FAILED';
+            */
             User[requestOtp] = function(number, callback){
                 requestOtpMethod(msg91Config, number, sendOTP)
                     .then(function () {
+                        console.log("Otp send");
                         callback(null, {
                             status: "Success"
                         });
                     })
                     .catch(function (error) {
+                        console.error("Otp send Error", error);
                         callback(error);
                     });
             };
@@ -37,11 +40,13 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             User[retryOtp] = function(number, callback){
                 retryOtpMethod(msg91Config, number, sendOTP)
                     .then(function () {
+                        console.log("Otp re-send");
                         callback(null, {
                             status: "Success"
                         });
                     })
                     .catch(function (error) {
+                        console.error("Otp re-send Error", error);
                         callback(error);
                     });
             };
