@@ -9,7 +9,8 @@
     "fb": "^1.0.2",
     "https": "^1.0.0",
     "request": "^2.69.0",
-    "instagram-node": "^0.5.8"
+    "instagram-node": "^0.5.8",
+    "sendotp": "^1.2.6"
   },
   "optionalDependencies": {},
   "repository": {
