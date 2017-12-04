@@ -168,12 +168,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         console.error(error);
                         reject(error);
                     }else{
-                        response({
+                        resolve({
                             status: "Success"
                         });
                     }
                 });
-                sendOTP.send(number, msg91Config.credentials.serviceName, function (error, data, response) {
+                /*sendOTP.send(number, msg91Config.credentials.serviceName, function (error, data, response) {
                     if(error){
                         console.error(error);
                         reject(error);
@@ -182,7 +182,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             status: "Success"
                         });
                     }
-                });
+                });*/
             }else{
                 reject(new Error("Number format not correct."));
             }
