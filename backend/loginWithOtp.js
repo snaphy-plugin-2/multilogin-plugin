@@ -232,11 +232,19 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         if (!match) {
             number = "+91" + number;
         }
-        //9953242338, +91-9953242338, +91-9953242338
-        const pattern = /^(\+91\-?)?\d{10,10}$/;
-        if(pattern.test(number)){
-            number = _.replace(number, /^(\+91\-?)?/, '')
-        }
+        // //matching the number..
+        // var patt = /\+\d{12,12}/;
+        // //remove 0 from the number
+        // number = number.replace(/^0/, "");
+        // var match = number.match(patt);
+        // if (!match) {
+        //     number = "+91" + number;
+        // }
+        // //9953242338, +91-9953242338, +91-9953242338
+        // const pattern = /^(\+91\-?)?\d{10,10}$/;
+        // if(pattern.test(number)){
+        //     number = _.replace(number, /^(\+91\-?)?/, '')
+        // }
         return number;
     };
 
