@@ -327,25 +327,23 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      */
     var updateAccessTokenModel = function(userInstance){
         return new Promise(function (resolve, reject) {
-            const {oneInstanceLogin} = msg91Config.login.mobile;
-            new Promise(function(resolve, reject){
+            const {oneInstanceLogin} = packageObj.config.msg91.login.mobile;
+            new Promise(function(resolve_, reject_){
                 if(oneInstanceLogin){
-                    console.log("Logout from all other devices.");
-                    AccessToken = databaseObj.AccessToken;
+                    const AccessToken = databaseObj.AccessToken;
                     AccessToken.destroyAll({
                         userId: userInstance.id
                     })
                     .then(function(){
-                        console.log("Logout done.");
-                        resolve();
+                        
+                        resolve_();
                     })
                     .catch(function(error){
-                        console.error("Logout rejected". error);
-                        reject(error);
+                       
+                        reject_(error);
                     })
                 }else{
-                    console.log("oneInstanceLogin not activated");
-                    resolve();
+                    resolve_();
                 }
             })
             .then(function(){
