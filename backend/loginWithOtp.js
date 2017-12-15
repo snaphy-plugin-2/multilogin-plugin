@@ -10,7 +10,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
     const addPasswordlessLogin = function (msg91Config) {
         const {method, requestOtp, retryOtp, enable, oneInstanceLogin} = msg91Config.login.mobile;
-        console.log(method, requestOtp, retryOtp, enable, oneInstanceLogin);
         const message = msg91Config.credentials.defaultMessage || 'Otp for your request is {{otp}}, please do not share it with anybody';
         const sendOTP = new SendOtp(msg91Config.credentials.authKey, message);
         const expiryTime = msg91Config.credentials.expiryInMinutes || "2"; //by default it has been set up to 2
@@ -326,8 +325,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      * Update the user accessToken data
      * @param userInstance
      */
-    var updateAccessTokenModel = function(userInstance, oneInstanceLogin){
+    var updateAccessTokenModel = function(userInstance){
         return new Promise(function (resolve, reject) {
+            const {oneInstanceLogin} = msg91Config.login.mobile;
             new Promise(function(resolve, reject){
                 if(oneInstanceLogin){
                     console.log("Logout from all other devices.");
