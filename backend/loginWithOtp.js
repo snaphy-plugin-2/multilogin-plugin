@@ -201,16 +201,18 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         return new Promise(function (resolve, reject) {
             number = formatNumber(number);
             if(number){
+                resolve({
+                    status: "Success"
+                });
                 sendOTP.send(number, msg91Config.credentials.serviceName, function (error, data, response) {
                     if(error){
                         console.error(error);
                         reject(error);
                     }else{
-                        resolve({
-                            status: "Success"
-                        });
+                        
                     }
                 });
+
             }else{
                 reject(new Error("Number format not correct."));
             }
