@@ -141,7 +141,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             });
                     }
                     else {
-                        reject(new Error("OTP didnot match"));
+                        reject(new Error("OTP did not match"));
                     }
                 });
             }else{
