@@ -233,10 +233,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             //Now create user and login..
                             //createUserOrLogin(data, packageObj, User,  callback);
                             var userData = {};
-                            userData.email = data.email;
-                            userData.name = data.name;
+                            userData.email     = data.email;
+                            userData.name      = data.name;
                             userData.firstName = data.given_name;
-                            userData.lastName = data.family_name;
+                            userData.lastName  = data.family_name;
                             if(phoneNumber){
                                 userData.phoneNumber = phoneNumber;
                             }
