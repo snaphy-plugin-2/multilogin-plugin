@@ -233,10 +233,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             //Now create user and login..
                             //createUserOrLogin(data, packageObj, User,  callback);
                             var userData = {};
-                            userData.email = data.email;
-                            userData.name = data.name;
+                            userData.email     = data.email;
+                            userData.name      = data.name;
                             userData.firstName = data.given_name;
-                            userData.lastName = data.family_name;
+                            userData.lastName  = data.family_name;
                             if(phoneNumber){
                                 userData.phoneNumber = phoneNumber;
                             }
@@ -280,7 +280,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             //Now defining a method login with access token
             User[method] = function (accessToken, cb) {
                 FB.setAccessToken(accessToken);
-                FB.api('me', {fields: ['id', 'name', "first_name", "last_name", "email"]}, function (res) {
+                FB.api('me', {fields: ['id', 'name', "first_name", "last_name", "email", "gender", "picture", "birthday"]}, function (res) {
                     if(!res || res.error) {
                         console.log(!res ? 'error occurred' : res.error);
                         var err = new Error('Invalid Access Token');
@@ -293,7 +293,15 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
 
 
-                    var userData = {email: res.email, "firstName": res.first_name, "lastName": res.last_name };
+                    var userData = {
+                        email: res.email, 
+                        "firstName": res.first_name, 
+                        "lastName": res.last_name, 
+                        "gender":res.gender, 
+                        "picture":res.picture, 
+                        "user_birthday":res.birthday, 
+                        "name":res.name 
+                    };
 
                     //console.log(profileUrl);
                     if(profileUrl){
